@@ -11,12 +11,19 @@ Features
 Install
 -----------
 cd /usr/share
+
 sudo apt-get install speedtest-cli
+
 git clone https://github.com/shifty0g/net-check
+
 cd net-check
+
 chmod +x net-check.sh
 
+
 create an alias to the file (add in alias file)
+
+
 echo "alias net-check='/usr/share/net-check/net-check.sh'" >> ~/.bash_aliases
 
 
