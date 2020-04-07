@@ -4,11 +4,13 @@ DATE="07-04-2020"
 # net-check - just checks network connectivity
 # needs speedtest-cli to be install -- sudo apt-get install speedtest-cli
 
+# maybe add nmap scan too 
+
 if [[ $EUID -ne 0 ]]; then
 	echo ""
 	echo -e "\e[01;31m[!]\e[00m This must be run as root. Run again with 'sudo'"
 	echo ""
-	break 2> /dev/null
+	exit 0 2> /dev/null
 fi
 
 echo ""
@@ -29,11 +31,11 @@ echo -e "\e[94m[*] Ping Checks - Default Gateway ("$GW")"
 echo ""
 ping -c2 $GW 2>/dev/null | grep "bytes from" 
 
-echo ""
-echo -e "\e[93m[*] Ping Checks - Random IP from ARP ("$randomip")"
-echo ""
-randomip=$(shuf -n 1 tempxxxx)
-ping -c2 $randomip 2>/dev/null | grep "bytes from" 
+#echo ""
+#echo -e "\e[93m[*] Ping Checks - Random IP from ARP ("$randomip")"
+#echo ""
+#randomip=$(shuf -n 1 tempxxxx)
+#ping -c2 $randomip 2>/dev/null | grep "bytes from" 
 
 echo ""
 DNS=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}' 2>/dev/null) 
@@ -62,18 +64,23 @@ host -4 yahoo.com 2>/dev/null
 
 
 echo ""
-echo -e "\e[94m[*] Curl Checks - External Out by DNS NAME #2 (https://google.co.uk) *"
+echo -e "\e[94m[*] nmap - nmap.org 8.8.8.8 *"
 echo ""
-echo -e "\e[94m $(curl -i -k https://google.co.uk  2>/dev/null)"
+nmap -T4 -PN -p53,80,443,22,3389 nmap.org 8.8.8.8 
 
 echo ""
-echo -e "\e[93m[+] Speedtest-cli "
+echo -e "\e[93m[*] Curl Checks - External Out by DNS NAME #2 (https://google.co.uk) *"
+echo ""
+echo -e "\e[93m $(curl -i -k https://google.co.uk  2>/dev/null)"
+
+echo ""
+echo -e "\e[92m[+] Speedtest-cli "
 echo ""
 # sudo apt-get install speedtest-cli
 speedtest-cli
 
 # cleanup
 rm tempxxxx 2>/dev/null
-echo -e "\e[49m\e[39m \necho =============================[ COMPLETE ]=============================="
+echo -e "\e[49m\e[39m \n =============================[ COMPLETE ]=============================="
 
 #end
