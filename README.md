@@ -1,12 +1,15 @@
 net-check
 =========================
-a simple bash script to check network connectivity
+a simple bash script to check network connectivity. just for when your lazy and want a quick check
 
 Features
 --------------
 * Ping local interface, DNS server + Gateway
 * Arp Scan
-* 
+* host
+* curl google.co.uk
+* speedtext-cli
+* nmap - small port scan check
 
 Install
 -----------
