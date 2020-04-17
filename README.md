@@ -21,10 +21,15 @@ Features
 Install
 -----------
 cd /usr/share
+
 git clone https://github.com/shifty0g/lazy-net-tools
+
 cd lazy-net-check
+
 chmod +x net-check.sh
+
 ./net-tools.sh net-tools-install
+
 * runs the function to instal the additional tools required and adds source entry to ~/.bashrc
 
 Usege
