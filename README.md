@@ -29,10 +29,6 @@ chmod +x net-check.sh
 
 Usege
 ---------
-net-check
-
-Example Output
--------------
 ```console
 net-help 
                __              __                .__           
