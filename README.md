@@ -31,6 +31,8 @@ cd /usr/share && git clone https://github.com/shifty0g/net-tools/ && cd net-tool
 
 Usege
 ---------
+once installed you can run the functions shown below from your shell 
+
 ```console
 net-help 
                __              __                .__
