@@ -1,10 +1,12 @@
 #!/bin/bash
 # net-tools - a set of functions for networking
 VERSION="1.1"
-DATE="12-03-2020"
+DATE="13-04-2022"
 
+# adjust if your interface is different 
 export nwinterface="eth0"
 
+alias ns="netstat -ta"
 alias hosts='sudo mousepad /etc/hosts'
 alias i='ifconfig -a'
 
@@ -54,12 +56,15 @@ else
 	ip route
 fi
 }
-function nameserver {
+function nameserver-add {
 echo "nameserver" $1 > /etc/resolv.conf
 if [ -n "$2" ]; then
     echo "nameserver" $1 >> /etc/resolv.conf
 fi
 cat /etc/resolv.conf
+}
+function nameserver-edit {
+$EDITOR /etc/resolv.conf
 }
 function gateway { 
 route add default gw $1
@@ -180,9 +185,24 @@ tables-show
 }
 function block-ip {
 if [ -z "$1" ]; then
-	echo "[*] Usage: $0 <IPv4 ADDRESS - ie 10.2.202.124/30>"
+	echo "[*] Usage: $0 <IPv4 ADDRESS - ie 10.2.202.124/30 or FILE - ie excludes.txt>"
 	return
 elif [ "$1" ]; then
+	if [ -f "$1" ]; then 
+		for line in $(cat $1); do
+			#block an ipv4 address
+			# arptables (apt-get install arptables) - https://linoxide.com/security/use-arptables-linux/
+			sudo arptables -A INPUT -s $line -j DROP
+			sudo arptables -A OUTPUT -s $line -j DROP
+			sudo arptables -A INPUT -d $line -j DROP
+			sudo arptables -A OUTPUT -d $line -j DROP
+			#iptables
+			sudo iptables -A INPUT -s $line -j DROP
+			sudo iptables -A OUTPUT -s $line -j DROP
+			sudo iptables -A INPUT -d $line -j DROP
+			sudo iptables -A OUTPUT -d $line -j DROP
+		done
+	else
 	#block an ipv4 address
 	# arptables (apt-get install arptables) - https://linoxide.com/security/use-arptables-linux/
 	sudo arptables -A INPUT -s $1 -j DROP
@@ -194,29 +214,47 @@ elif [ "$1" ]; then
 	sudo iptables -A OUTPUT -s $1 -j DROP
 	sudo iptables -A INPUT -d $1 -j DROP
 	sudo iptables -A OUTPUT -d $1 -j DROP
+	fi
 	tables-show
 fi
 }
-function block-ip-file {
-if [ -z "$1" ]; then
-	echo "[*] Usage: $0 <excludes.txt>"	
+function tables-show {
+echo "[+] IPv4"
+echo -e "\e[95m- iptables:"
+echo -e "----------------------------------------------------------------------"
+sudo iptables -L
+echo -e "----------------------------------------------------------------------"
+echo ""
+echo "- arptables:"
+echo "----------------------------------------------------------------------"
+sudo arptables -L
+echo -e "----------------------------------------------------------------------\e[96m "
+echo "[+] IPv6"
+echo ""
+echo "- ip6tables:"
+echo "----------------------------------------------------------------------"
+sudo ip6tables -L
+echo -e "----------------------------------------------------------------------\e[0m"
+}
+function hosts-add {
+if [ -z "$1" ]||[ -z "$2" ]; then
+	echo "[*] Usage: $0 <IP> <NAME>"
 	return
-elif [ "$1" ]; then
-	for line in $(cat $1); do
-		#block an ipv4 address
-		# arptables (apt-get install arptables) - https://linoxide.com/security/use-arptables-linux/
-		sudo arptables -A INPUT -s $line -j DROP
-		sudo arptables -A OUTPUT -s $line -j DROP
-		sudo arptables -A INPUT -d $line -j DROP
-		sudo arptables -A OUTPUT -d $line -j DROP
-		#iptables
-		sudo iptables -A INPUT -s $line -j DROP
-		sudo iptables -A OUTPUT -s $line -j DROP
-		sudo iptables -A INPUT -d $line -j DROP
-		sudo iptables -A OUTPUT -d $line -j DROP
-	done
-	tables-show;
 fi
+case `grep -i "$1 $2" "/etc/hosts" >/dev/null; echo $?` in
+  0)
+    # code if found
+    echo "[*] $1 $2 is already in /etc/hosts"
+    ;;
+  1)
+    # code if not found
+    echo "$1 $2" >> /etc/hosts
+    ;;
+  *)
+    # code if an error occurred
+    echo "[!] ERROR"
+    ;;
+esac
 }
 function block-ip6 {
 if [ -z "$1" ]; then
@@ -327,7 +365,6 @@ else
 fi
 }
 
-
 function net-tools-install {
 if [[ $EUID -ne 0 ]]; then
 	echo ""
@@ -384,8 +421,8 @@ echo -e "\e[91mdhcp\e[39m	DHCP on $nwinterface  (specify the interface if you wa
 " | column -t -s'	'
 echo -e "\e[39m========================================================================================"
 echo ""
+nmap -iflist
 }
-
 
 
 
