@@ -3,6 +3,9 @@ net-tools
 a simple bash script to check network connectivity and set various other network things 
 nothing special just to make things a little eaiser becasue im lazy
 
+This is still a work in progress so may be a bit rough around the edges
+
+
 Features
 --------------
 * Set Static IP
@@ -18,6 +21,7 @@ Features
 * flush iptables
 * Set Proxy Settings
 * Clear Proxy Settings 
+
 
 
 Install

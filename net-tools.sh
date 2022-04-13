@@ -1,13 +1,47 @@
 #!/bin/bash
-# net-tools - a set of functions for networking
+LAST_UPDATED="13/02/2022"
 VERSION="1.1"
-DATE="13-04-2022"
+#
+# all network realted functions i make live in here 
+#
+# Version Updates
+#=================
+# 1.1
+#	added better hosts-add function 
+#
+#
 
-# adjust if your interface is different 
-export nwinterface="eth0"
+# TO DO
+#==============
+# - fix speedtest module or find an alternative
+# - add in ipcalc
+# - check DNS. resolve local and outside
+# - im prove - check if file - maybe use checkinput?
+# - add a heads up prints out everything nicely - int, route, gw est
+# - gateway show - have variables for collecting route nameserver gw  puclic private .. est  so they can be used as vaiables
+# - variable for each int NWINTERFACE NWINTERFACE2 ... GW ROUTE. LOCALIP. PUBLICIP
+# - net-info . shows a little dashboard heads up of nw info
 
+
+# change this to your correct interface 
+export NWINTERFACE="eth0"
+
+
+
+export LOCALIP=$(ip addr show $NWINTERFACE | grep 'inet' | cut -d: -f2 | awk '{ print $2}' |grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
+export LOCALNW=$(ip addr show $NWINTERFACE | grep 'inet' | cut -d: -f2 | awk '{ print $2}' 2>/dev/null | head -1)
+export DNS=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}' | tr "\n " " " 2>/dev/null)
+export GW=$(ip route | awk '/default/ { print $3 }' 2>/dev/null | head -1)
+export EXT_IP=$(wget http://ipinfo.io/ip -qO - | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
+export EDITOR="nano"
+
+alias hosts='sudo $EDITOR /etc/hosts'
+alias resolv='sudo $EDITOR /etc/resolv.conf'
+alias i='ifconfig -a'
+alias nameserver-list="cat /etc/resolv.conf | grep nameserver"
+alias dns-set="$EDITOR /etc/resolv.conf"
+alias net-help="help-net"
 alias ns="netstat -ta"
-alias hosts='sudo mousepad /etc/hosts'
 alias i='ifconfig -a'
 
 function flushall {
@@ -20,12 +54,12 @@ for line in $(ifconfig | grep eth\[0-9\] | cut -d: -f1); do
 done
 }
 function static {
-ip a flush $nwinterface  
+ip a flush $NWINTERFACE  
 sleep 0.5
-ifconfig $nwinterface $1
+ifconfig $NWINTERFACE $1
 sleep 0.5
-ifconfig $nwinterface up
-ifconfig $nwinterface 
+ifconfig $NWINTERFACE up
+ifconfig $NWINTERFACE 
 echo "" 
 cat /etc/resolv.conf 
 echo "" 
@@ -34,11 +68,11 @@ ip route
 function dhcp {
 # $1  - eth1.. so dhcp eth1
 if [ -z "$1" ]; then
-	ip a flush $nwinterface  
-	ifconfig $nwinterface  down 
-	ifconfig $nwinterface  up 
-	dhclient -v $nwinterface  
-	ifconfig $nwinterface  
+	ip a flush $NWINTERFACE  
+	ifconfig $NWINTERFACE  down 
+	ifconfig $NWINTERFACE  up 
+	dhclient -v $NWINTERFACE  
+	ifconfig $NWINTERFACE  
 	echo "" 
 	cat /etc/resolv.conf 
 	echo "" 
@@ -57,7 +91,7 @@ else
 fi
 }
 function nameserver-add {
-echo "nameserver" $1 > /etc/resolv.conf
+echo "nameserver" $1 >> /etc/resolv.conf
 if [ -n "$2" ]; then
     echo "nameserver" $1 >> /etc/resolv.conf
 fi
@@ -94,7 +128,7 @@ echo "-------------------------------------------"
 echo ""
 echo -e "\e[96m[+] Ping Checks - $INT ($(ifconfig $INT | grep inet | head -1 | grep-ip | head -1))"
 echo "-------------------------------------------"
-ping -c2 $(ifconfig $nwinterface | grep inet | head -1 | grep-ip | head -1) 2>/dev/null
+ping -c2 $(ifconfig $NWINTERFACE | grep inet | head -1 | grep-ip | head -1) 2>/dev/null
 echo "-------------------------------------------"
 
 echo ""
@@ -107,7 +141,7 @@ echo "-------------------------------------------"
 echo ""
 echo -e "\e[94m[+] Ping Checks - Default Gateway ("$GW")"
 echo "-------------------------------------------"
-ping -c2 $(ip route | grep $nwinterface | awk '/default/ { print $3 }') 2>/dev/null | grep "bytes from"  
+ping -c2 $(ip route | grep $NWINTERFACE | awk '/default/ { print $3 }') 2>/dev/null | grep "bytes from"  
 echo "-------------------------------------------"
 
 
@@ -323,7 +357,7 @@ export NO_PROXY=localhost,127.0.0.1
 function ifu() {
 if [ -z "$1" ]
 then
-	ifconfig $nwinterface up
+	ifconfig $NWINTERFACE up
 else
 	ifconfig $1 up
 fi
@@ -331,7 +365,7 @@ fi
 function ifd() {
 if [ -z "$1" ]
 then
-	ifconfig $nwinterface down
+	ifconfig $NWINTERFACE down
 else
 	ifconfig $1 down
 fi
@@ -339,26 +373,26 @@ fi
 function flush() {
 if [ -z "$1" ]
 then
-	ifconfig flush $nwinterface
+	ifconfig flush $NWINTERFACE
 else
 	ifconfig flush $1 
 fi
 }
 function td {
-#if nothing given then run default on $nwinterface
+#if nothing given then run default on $NWINTERFACE
 if [ -z "$1" ]
 then
-	tcpdump -i $nwinterface &
+	tcpdump -i $NWINTERFACE &
 else
 	#else run on interface given
 	tcpdump -i $1 &
 fi
 }
 function ws {
-#if nothing given then run default on $nwinterface
+#if nothing given then run default on $NWINTERFACE
 if [ -z "$1" ]
 then
-	wireshark -i $nwinterface -k &
+	wireshark -i $NWINTERFACE -k &
 else
 	#else run on interface given
 	wireshark -i $1 -k &
@@ -379,6 +413,7 @@ sudo apt-get install -y arptables
 sudo apt-get install -y speedtest-cli 
 sudo apt-get install -y host
 sudo apt-get install -y iptables-persistent
+curl -Ls https://github.com/ipinfo/cli/releases/download/ipinfo-2.8.0/deb.sh | sh
 echo "source $(realpath $0)" >> ~/.bashrc
 }
 
@@ -394,7 +429,7 @@ echo "     \/     \/                                             \/  "
 echo "                                                               "
 echo -e "\e[39m[*] Usage: \e[91m[FUNCTION] \e[93m[PARAMS]\e[39m"
 echo "========================================================================================"
-echo -e "\e[91mdhcp\e[39m	DHCP on $nwinterface  (specify the interface if you want another one)
+echo -e "\e[91mdhcp\e[39m	DHCP on $NWINTERFACE  (specify the interface if you want another one)
 \e[91mstatic  \e[93m192.168.2.99/24	\e[39mset static IPv4 Address
 \e[91mgateway  \e[93m192.168.1.1	\e[39mset default gateway
 \e[91mnameserver  \e[93m192.168.1.1	\e[39madd nameserver to /etc/resolve.conf
@@ -406,13 +441,13 @@ echo -e "\e[91mdhcp\e[39m	DHCP on $nwinterface  (specify the interface if you wa
 \e[91mblock-ip6 \e[39m	use ip6tables to block a ipv6 adddress 
 \e[91mhosts-add  \e[93m10.10.10.171 htb.openadmin	\e[39madds hosts entry to /etc/hosts
 \e[91mhosts	\e[39mopens up /etc/hosts
-\e[91mflush	\e[39mflushes $nwinterface (specify the interface if you want another one)
-\e[91mifu	\e[39mifconfig up on $nwinterface  (specify the interface if you want another one)
-\e[91mifd	\e[39mifconfig down on $nwinterface  (specify the interface if you want another one)
+\e[91mflush	\e[39mflushes $NWINTERFACE (specify the interface if you want another one)
+\e[91mifu	\e[39mifconfig up on $NWINTERFACE  (specify the interface if you want another one)
+\e[91mifd	\e[39mifconfig down on $NWINTERFACE  (specify the interface if you want another one)
 \e[91mflushall	\e[39mflushes ALL eth adapters
 \e[91mi	\e[39mshows ifconfig - just lazy
 \e[91mpublicip	\e[39mshows public ip address
-\e[91mws	\e[39mstarts wirshark on $nwinterface (specify the interface if you want another one)
+\e[91mws	\e[39mstarts wirshark on $NWINTERFACE (specify the interface if you want another one)
 \e[91mspeedtest	\e[39mruns speedtest-cli
 \e[91mproxy-off	\e[39mclear proxy settings
 \e[91mproxy-on	\e[39madd proxy settings 
