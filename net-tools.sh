@@ -1,5 +1,5 @@
 #!/bin/bash
-LAST_UPDATED="13/02/2022"
+LAST_UPDATED="15/02/2022"
 VERSION="1.1"
 #
 # all network realted functions i make live in here 
@@ -7,7 +7,7 @@ VERSION="1.1"
 # Version Updates
 #=================
 # 1.1
-#	added better hosts-add function 
+#	added better hosts-add function and a few other little bits
 #
 #
 
@@ -15,34 +15,42 @@ VERSION="1.1"
 #==============
 # - fix speedtest module or find an alternative
 # - add in ipcalc
+# - list all interfaces 
 # - check DNS. resolve local and outside
 # - im prove - check if file - maybe use checkinput?
 # - add a heads up prints out everything nicely - int, route, gw est
 # - gateway show - have variables for collecting route nameserver gw  puclic private .. est  so they can be used as vaiables
 # - variable for each int NWINTERFACE NWINTERFACE2 ... GW ROUTE. LOCALIP. PUBLICIP
 # - net-info . shows a little dashboard heads up of nw info
+# get a list of interfaces 
+# reset dns 
 
 
 # change this to your correct interface 
 export NWINTERFACE="eth0"
-
-
 
 export LOCALIP=$(ip addr show $NWINTERFACE | grep 'inet' | cut -d: -f2 | awk '{ print $2}' |grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
 export LOCALNW=$(ip addr show $NWINTERFACE | grep 'inet' | cut -d: -f2 | awk '{ print $2}' 2>/dev/null | head -1)
 export DNS=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}' | tr "\n " " " 2>/dev/null)
 export GW=$(ip route | awk '/default/ { print $3 }' 2>/dev/null | head -1)
 export EXT_IP=$(wget http://ipinfo.io/ip -qO - | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
-export EDITOR="nano"
+
+export EDITOR="subl" # sublime text 
 
 alias hosts='sudo $EDITOR /etc/hosts'
 alias resolv='sudo $EDITOR /etc/resolv.conf'
 alias i='ifconfig -a'
 alias nameserver-list="cat /etc/resolv.conf | grep nameserver"
 alias dns-set="$EDITOR /etc/resolv.conf"
-alias net-help="help-net"
-alias ns="netstat -ta"
-alias i='ifconfig -a'
+
+# lazy / quick access 
+alias helpnet="net-help"
+alias nethelp="net-help"
+alias help-net="net-hel"
+alias ns="netstat -antp"
+alias i='ip a'
+alias ipu="ifu"
+alias ipd="ifd" 
 
 function flushall {
 for line in $(ifconfig | grep eth\[0-9\] | cut -d: -f1); do
@@ -398,6 +406,39 @@ else
 	wireshark -i $1 -k &
 fi
 }
+function allup() {
+ifconfig eth0 up 2>/dev/null
+ifconfig eth1 up 2>/dev/null
+ifconfig eht2 up 2>/dev/null
+ifconfig eth3 up 2>/dev/null
+ifconfig eth4 up 2>/dev/null
+ifconfig eth5 up 2>/dev/null
+ifconfig eth6 up 2>/dev/null
+ifconfig $NWINTERFACE up 2>/dev/null
+# fix this too 
+echo "[!] All interfaces UP"
+}
+function alldown() {
+ifconfig eth0 down 2>/dev/null
+ifconfig eth1 down 2>/dev/null
+ifconfig eht2 down 2>/dev/null
+ifconfig eth3 down 2>/dev/null
+ifconfig eth4 down 2>/dev/null
+ifconfig eth5 down 2>/dev/null
+ifconfig eth6 down 2>/dev/null
+ifconfig $NWINTERFACE down 2>/dev/null
+echo "[!] All interfaces DOWN"
+# i will make these better some time . currently lazy way 
+}
+function fixinternet() {
+flushall
+alldown 
+route -n
+ifu $NWINTERFACE
+dhcp $NWINTERFACE
+curl ipinfo.io
+net-check 
+}
 
 function net-tools-install {
 if [[ $EUID -ne 0 ]]; then
@@ -452,6 +493,9 @@ echo -e "\e[91mdhcp\e[39m	DHCP on $NWINTERFACE  (specify the interface if you wa
 \e[91mproxy-off	\e[39mclear proxy settings
 \e[91mproxy-on	\e[39madd proxy settings 
 \e[91mnet-help	\e[39mashow the net-tools help menu (THIS)
+\e[91mallup 	\e[39mifconfig up on all interfaces 
+\e[91malldown 	\e[39mifconfig down on all interfaces 
+\e[91fixinternet 	\e[39mturn it all off and on again and see if got tinternet
 \e[91mnet-tools-install	\e[39mrun as root to install tools and include file in .bashrc
 " | column -t -s'	'
 echo -e "\e[39m========================================================================================"

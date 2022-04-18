@@ -28,10 +28,20 @@ Install
 -----------
 Tried to make it easy use the oneliner to install the script and add it to bashrc
 
-```console
-cd /usr/share && git clone https://github.com/shifty0g/net-tools/ && cd net-tools && chmod +x net-tools.sh && ./net-tools.sh net-tools-install
-```
+cd /tools
+git clone https://github.com/shifty0g/net-tools/
+cd net-tools
+chmod +x net-tools.sh 
+source net-tools.sh
+net-tools-install
 
+
+then add the realpath to the file into your bashrc or zshrc something like 
+
+echo "source $(realpath net-tools.sh)" >> /root/.zshrc
+
+
+you should then be able to run the functions straing from your shell 
 
 Usege
 ---------
