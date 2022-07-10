@@ -1,30 +1,33 @@
 #!/bin/bash
 LAST_UPDATED="15/02/2022"
 VERSION="1.1"
-#
-# all network realted functions i make live in here 
-#
-# Version Updates
-#=================
-# 1.1
-#	added better hosts-add function and a few other little bits
-#
-#
+: '
+ all network realted functions i make live in here 
 
-# TO DO
-#==============
-# - fix speedtest module or find an alternative
-# - add in ipcalc
-# - list all interfaces 
-# - check DNS. resolve local and outside
-# - im prove - check if file - maybe use checkinput?
-# - add a heads up prints out everything nicely - int, route, gw est
-# - gateway show - have variables for collecting route nameserver gw  puclic private .. est  so they can be used as vaiables
-# - variable for each int NWINTERFACE NWINTERFACE2 ... GW ROUTE. LOCALIP. PUBLICIP
-# - net-info . shows a little dashboard heads up of nw info
-# get a list of interfaces 
-# reset dns 
+ Version Updates
+=================
+ 1.1
+	added better hosts-add function and a few other little bits
 
+
+
+ TO DO
+==============
+add more eth functions 
+fix speedtest module or find an alternative
+add in ipcalc
+list all interfaces 
+check DNS. resolve local and outside
+im prove - check if file - maybe use checkinput?
+add a heads up prints out everything nicely - int, route, gw est
+gateway show - have variables for collecting route nameserver gw  puclic private .. est  so they can be used as vaiables
+variable for each int NWINTERFACE NWINTERFACE2 ... GW ROUTE. LOCALIP. PUBLICIP
+net-info . shows a little dashboard heads up of nw info
+get a list of interfaces 
+reset dns 
+reset resolv file 
+
+'
 
 # change this to your correct interface 
 export NWINTERFACE="eth0"
@@ -51,6 +54,13 @@ alias ns="netstat -antp"
 alias i='ip a'
 alias ipu="ifu"
 alias ipd="ifd" 
+
+
+function ipp {
+echo $LOACALIP
+ip add show $NWINTERFACE | grep -v inet6 | grep inet | cut -c 1-28 | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b"
+}
+alias ipa=ipp
 
 function flushall {
 for line in $(ifconfig | grep eth\[0-9\] | cut -d: -f1); do
@@ -108,6 +118,8 @@ cat /etc/resolv.conf
 function nameserver-edit {
 $EDITOR /etc/resolv.conf
 }
+alias dns-edit=nameserver-edit
+
 function gateway { 
 route add default gw $1
 sleep 0.2 
@@ -439,6 +451,45 @@ dhcp $NWINTERFACE
 curl ipinfo.io
 net-check 
 }
+function nw-config () {
+$EDITOR /etc/network/interfaces
+}
+function docker-route {
+# manually adds back docker route.. u may need to adjust this if urs is differnt
+route add -net 172.17.0.0/16 dev docker0
+}
+
+function nw-eth0-dhcp () {
+ifconfig eth0 down 
+ip route flush table main
+sleep 2
+echo "" > /etc/resolv.conf 
+ifconfig eth0 up
+sleep 2 
+dhclient eth0 -v
+sleep 2
+docker-route
+sleep 1
+nmap --iflist
+curl ipinfo.io
+ping google.co.uk -c 5
+}
+function nw-eth1-dhcp () {
+ifconfig eth1 down 
+sleep 2
+ip route flush table main
+echo "" > /etc/resolv.conf 
+ifconfig eth1 up
+sleep 2 
+dhclient eth1 -v
+sleep 2
+docker-route
+docker 1
+nmap --iflist
+curl ipinfo.io
+ping google.co.uk -c 5
+}
+
 
 function net-tools-install {
 if [[ $EUID -ne 0 ]]; then
