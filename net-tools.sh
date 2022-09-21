@@ -36,7 +36,13 @@ export LOCALIP=$(ip addr show $NWINTERFACE | grep 'inet' | cut -d: -f2 | awk '{ 
 export LOCALNW=$(ip addr show $NWINTERFACE | grep 'inet' | cut -d: -f2 | awk '{ print $2}' 2>/dev/null | head -1)
 export DNS=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}' | tr "\n " " " 2>/dev/null)
 export GW=$(ip route | awk '/default/ { print $3 }' 2>/dev/null | head -1)
-export EXT_IP=$(wget http://ipinfo.io/ip -qO - | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
+#export EXT_IP=$(wget http://ipinfo.io/ip -qO - | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
+
+export IP_ETH0=$(ifconfig eth0 | grep netmask | cut -d ' ' -f10)
+export IP_ETH1=$(ifconfig eth1 | grep netmask | cut -d ' ' -f10)
+export eth0=$IP_ETH0
+export eth1=$IP_ETH1
+
 
 export EDITOR="subl" # sublime text 
 
