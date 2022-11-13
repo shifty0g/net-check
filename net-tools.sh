@@ -43,6 +43,14 @@ export IP_ETH1=$(ifconfig eth1 | grep netmask | cut -d ' ' -f10)
 export eth0=$IP_ETH0
 export eth1=$IP_ETH1
 
+function getip {
+export IP_ETH0=$(ifconfig eth0 | grep netmask | cut -d ' ' -f10)
+export IP_ETH1=$(ifconfig eth1 | grep netmask | cut -d ' ' -f10)
+
+export eth0=$(ifconfig eth0 | grep netmask | cut -d ' ' -f10)
+export eth1=$(ifconfig eth1 | grep netmask | cut -d ' ' -f10)
+}
+
 
 export EDITOR="subl" # sublime text 
 
@@ -494,17 +502,6 @@ docker 1
 nmap --iflist
 curl ipinfo.io
 ping google.co.uk -c 5
-}
-function nw-eth1-host () {
-ifconfig eth1 down 
-sleep 2
-ifconfig eth1 up
-sleep 2
-ifconfig eth1 192.168.56.66/24 
-sleep 2
-ip route add 192.168.56.0/24 via 192.168.56.66 dev eth1
-docker-route
-nmap --iflist
 }
 
 
