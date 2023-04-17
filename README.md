@@ -28,12 +28,14 @@ Install
 -----------
 Tried to make it easy use the oneliner to install the script and add it to bashrc
 
+```
 cd /tools
 git clone https://github.com/shifty0g/net-tools/
 cd net-tools
 chmod +x net-tools.sh 
 source net-tools.sh
 net-tools-install
+```
 
 
 then add the realpath to the file into your bashrc or zshrc something like 
